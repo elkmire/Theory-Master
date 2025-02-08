@@ -1157,13 +1157,13 @@
         }
 
         function getChordNotes(root, degree, type, modes, scale, key) {
-            // Get all notes in the current scale
+            // Get notes for the current scale
             const scaleNotes = getScaleNotes(key, SCALES[scale]);
             const rootIndex = NOTES.indexOf(root);
             let intervals;
 
             if (modes.complex) {
-                // In complex mode, we can use notes outside the scale
+                // In complex mode, use the appropriate intervals based on chord type
                 if (modes.seventh) {
                     intervals = CHORD_TYPES.seventh[degree];
                 } else if (modes.advanced) {
@@ -1176,19 +1176,19 @@
                             type.includes('aug') ? CHORD_TYPES.basic.augmented :
                             CHORD_TYPES.basic.major;
                 }
+                // Use intervals directly since we're allowing out-of-scale notes in complex mode
                 return intervals.map(interval => NOTES[(rootIndex + interval) % 12]);
             } else {
                 // When not in complex mode, strictly use scale notes
-                let chordNotes = [root]; // Start with root note
+                let chordNotes = [root];
                 let noteIndex = scaleNotes.indexOf(root);
                 
-                // Find the next scale note that's 2 scale degrees up
+                // Build chord using scale degrees
                 for (let i = 1; i < scaleNotes.length; i++) {
                     const nextIndex = (noteIndex + 2) % scaleNotes.length;
                     chordNotes.push(scaleNotes[nextIndex]);
                     noteIndex = nextIndex;
                     
-                    // Break after we have 3 notes (triad) or 4 notes (seventh chord)
                     if (modes.seventh && chordNotes.length === 4) break;
                     if (!modes.seventh && chordNotes.length === 3) break;
                 }
@@ -1305,9 +1305,9 @@
             
             const scaleNotes = getScaleNotes(key, SCALES[scale]);
             const fifthKey = NOTES[(NOTES.indexOf(key) + 7) % 12];
-            const complementaryNotes = getScaleNotes(fifthKey, SCALES[scale]);
+            const fifthScaleNotes = getScaleNotes(fifthKey, SCALES[scale]);
             const fourthKey = NOTES[(NOTES.indexOf(key) + 5) % 12];
-            const fourthNotes = getScaleNotes(fourthKey, SCALES[scale]);
+            const fourthScaleNotes = getScaleNotes(fourthKey, SCALES[scale]);
             
             const chords = [];
             const chordDetails = [];
@@ -1315,29 +1315,42 @@
             progression.forEach(degree => {
                 const rootIndex = romanToNumber(degree);
                 let chordRoot = scaleNotes[rootIndex % scaleNotes.length];
+                let usesFifthOrFourth = false;
+                let borrowedKey = key;
                 
-                // Only allow non-scale notes in complex mode
-                if (modes.complex) {
-                    if (Math.random() < 0.4) {
-                        // 40% chance to use a note from complementary or fourth key
-                        if (Math.random() < 0.5) {
-                            // Use note from fifth key (complementary)
-                            const complementaryNote = complementaryNotes[Math.floor(Math.random() * complementaryNotes.length)];
-                            if (!scaleNotes.includes(complementaryNote)) {
-                                chordRoot = complementaryNote;
-                            }
-                        } else {
-                            // Use note from fourth key
-                            const fourthNote = fourthNotes[Math.floor(Math.random() * fourthNotes.length)];
-                            if (!scaleNotes.includes(fourthNote)) {
-                                chordRoot = fourthNote;
-                            }
+                // Complex mode logic for borrowing chords
+                if (modes.complex && Math.random() < 0.4) {  // 40% chance to use borrowed chord
+                    if (Math.random() < 0.5) {  // 50/50 chance between fifth and fourth
+                        // Use a chord from the fifth key's scale
+                        const fifthScaleIndex = Math.floor(Math.random() * fifthScaleNotes.length);
+                        const borrowedNote = fifthScaleNotes[fifthScaleIndex];
+                        if (!scaleNotes.includes(borrowedNote)) {
+                            chordRoot = borrowedNote;
+                            usesFifthOrFourth = true;
+                            borrowedKey = fifthKey;
+                        }
+                    } else {
+                        // Use a chord from the fourth key's scale
+                        const fourthScaleIndex = Math.floor(Math.random() * fourthScaleNotes.length);
+                        const borrowedNote = fourthScaleNotes[fourthScaleIndex];
+                        if (!scaleNotes.includes(borrowedNote)) {
+                            chordRoot = borrowedNote;
+                            usesFifthOrFourth = true;
+                            borrowedKey = fourthKey;
                         }
                     }
                 }
                 
                 const chordType = getChordQuality(degree, scale);
-                const notes = getExtendedChordNotes(chordRoot, degree, chordType, modes, scale, key);
+                // If we're using a borrowed chord, we need to use notes from that chord's scale
+                const notes = getExtendedChordNotes(
+                    chordRoot, 
+                    degree, 
+                    chordType, 
+                    modes, 
+                    scale,
+                    borrowedKey
+                );
                 
                 let chordSymbol = chordRoot + chordType;
                 if (modes.advanced || modes.seventh) {
@@ -1354,7 +1367,8 @@
                 chordDetails.push({
                     symbol: chordName,
                     notes: notes,
-                    degree: degree
+                    degree: degree,
+                    borrowed: usesFifthOrFourth ? (borrowedKey === fifthKey ? 'fifth' : 'fourth') : null
                 });
             });
             
