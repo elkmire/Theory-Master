@@ -1,4 +1,5 @@
-# Music Theory Tool Technical Manual
+# [Theory Master](https://elkmire.github.io/Theory-Master/)
+click here^
 
 ## Overview
 The Music Theory Tool is an interactive web application designed for musicians, composers, and music theory students. It provides a visual and auditory interface for exploring musical scales, chord progressions, and harmonic relationships.
