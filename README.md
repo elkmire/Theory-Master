@@ -1,200 +1,171 @@
 # [Theory Master](https://elkmire.github.io/Theory-Master/)
 click here^
 
-## Overview
-The Music Theory Tool is an interactive web application designed for musicians, composers, and music theory students. It provides a visual and auditory interface for exploring musical scales, chord progressions, and harmonic relationships.
+# Music Theory Tool Manual
 
-## Core Features
-- Interactive piano keyboard interface
-- Real-time scale visualization
-- Chord progression generator
-- Circle of fifths integration
-- Multiple scale types and musical modes
-- Mood-based composition assistance
-- Advanced chord voicing options
+## Quick Start
+This interactive application helps you explore music theory concepts, generate chord progressions, and understand harmonic relationships.
 
-## User Interface Components
+## Basic Features
 
-### 1. Piano Keyboard
-- Two-octave range with clickable keys
-- Color-coded visualization:
-  - Root note: Pink (#ff006e)
-  - Scale notes: Mint green (#00ff9d)
-  - Circle of 5ths: Purple (#8a2be2)
-  - Circle of 4ths: Orange (#FF8C00)
-- Keyboard shortcuts available (A-J keys for first octave)
+### Interactive Keyboard
+* **Playing Notes**: 
+  * Click keys with mouse
+  * Use computer keyboard (A-L keys for lower octave)
+  * Visual feedback shows active notes and scale context
 
-### 2. Scale and Key Controls
-- Scale selector with multiple options:
-  - Major/Minor scales
-  - Modal scales (Dorian, Phrygian, etc.)
-  - Exotic scales (Hungarian, Persian, Japanese, etc.)
-- Key selector for all 12 chromatic notes
-- Automatic complementary key display (fifth and fourth relationships)
+### Main Controls
+* **Scale Selection**: Choose from major, minor, and exotic scales
+* **Key Selection**: Select any root note
+* **Mood Selection**: Generate progressions based on different emotional qualities
+* **Complementary Keys**: Shows the fifth up and fourth down for modulation
 
-### 3. Chord Progression Generator
-- Number of chords selector (2-8 chords)
-- Mood selection options:
-  - Happy
-  - Sad
-  - Mysterious
-  - Epic
-  - Romantic
-  - Melancholic
-  - Dreamy
-  - Tense
-  - Peaceful
-- Advanced chord options:
-  - Seventh chords
-  - Extended chords (9th/11th)
-  - Complex mode for advanced harmonic variations
+### Visual Color System
+* **Pink**: Root note of your selected key
+* **Teal**: Notes in the current scale
+* **Purple**: Fifth up (dominant relationship)
+* **Orange**: Fourth down (subdominant relationship)
+* **Blue**: Currently playing note
 
-## Music Theory Concepts
+## Theory Concepts
 
-### 1. Scale Systems
-The tool supports various scale systems:
+### Scale Construction
+The tool visualizes how scales are built from your chosen root note. Observe how different scale types create distinct patterns of whole and half steps:
+* Major scale: W-W-H-W-W-W-H
+* Natural minor: W-H-W-W-H-W-W
+* Other scales have unique patterns giving them their characteristic sound
 
+### Circle of Fifths Navigation
+* The purple highlighted note shows your dominant (fifth up)
+* The orange highlighted note shows your subdominant (fourth down)
+* Use these for:
+  * Understanding key relationships
+  * Planning modulations
+  * Creating stronger cadences
+
+## Chord Progression Generator
+
+### Mode Options
+1. **Basic Triads**
+   * Three-note chords
+   * All notes in same octave
+   * Clear, fundamental harmonies
+
+2. **Seventh Chords**
+   * Adds seventh above triad
+   * More colorful sound
+   * Standard in jazz progressions
+
+3. **Extended Chords**
+   * 9th and 11th extensions
+   * Rich, complex harmonies
+   * Great for modern styles
+
+4. **Complex Mode**
+   * Introduces borrowed chords
+   * Uses chromatic variations
+   * Creates unexpected turns
+
+### Mood Selection
+* Happy: Major-key progressions with strong resolutions
+* Sad: Minor-key and descending patterns
+* Mysterious: Uses unconventional chord relationships
+* Epic: Strong movements with dramatic changes
+* Romantic: Smooth voice leading with emotional shifts
+* Melancholic: Minor keys with nostalgic patterns
+* Dreamy: Extended harmonies with ambiguous resolutions
+* Tense: Dissonant relationships and unresolved tensions
+* Peaceful: Gentle progressions with stable harmonies
+
+## Adapting The Tool's Output
+
+### Understanding Voicings
+The tool generates linear voicings that you can adapt for different musical contexts:
+
+#### Close Position
 ```
-Standard Scales:
-- Major (Ionian): [0, 2, 4, 5, 7, 9, 11]
-- Natural Minor (Aeolian): [0, 2, 3, 5, 7, 8, 10]
-- Harmonic Minor: [0, 2, 3, 5, 7, 8, 11]
-- Melodic Minor: [0, 2, 3, 5, 7, 9, 11]
-
-Modal Scales:
-- Dorian: [0, 2, 3, 5, 7, 9, 10]
-- Phrygian: [0, 1, 3, 5, 7, 8, 10]
-- Lydian: [0, 2, 4, 6, 7, 9, 11]
-- Mixolydian: [0, 2, 4, 5, 7, 9, 10]
-- Locrian: [0, 1, 3, 5, 6, 8, 10]
-
-World/Exotic Scales:
-- Hungarian Minor: [0, 2, 3, 6, 7, 8, 11]
-- Persian: [0, 1, 4, 5, 6, 8, 11]
-- Japanese: [0, 2, 5, 7, 8]
-- Arabic: [0, 2, 4, 5, 6, 8, 10]
-- Egyptian: [0, 2, 5, 7, 10]
-- Chinese: [0, 4, 6, 7, 11]
+Original: C E G (all in same octave)
+Use when: 
+- Accompanying vocals
+- Need clear, compact sound
+- Playing with other instruments
 ```
 
-### 2. Chord Construction
-The tool uses several chord-building systems:
-
-#### Basic Triads
-- Major: [0, 4, 7]
-- Minor: [0, 3, 7]
-- Diminished: [0, 3, 6]
-- Augmented: [0, 4, 8]
-
-#### Seventh Chords
-- Major 7th: [0, 4, 7, 11]
-- Minor 7th: [0, 3, 7, 10]
-- Dominant 7th: [0, 4, 7, 10]
-
-#### Extended Chords
-- Major 9th: [0, 4, 7, 11, 14]
-- Minor 9th: [0, 3, 7, 10, 14]
-- Dominant 9th: [0, 4, 7, 10, 14]
-- Major 11th: [0, 4, 7, 11, 14, 17]
-- Minor 11th: [0, 3, 7, 10, 14, 17]
-
-### 3. Mood-Based Progression Patterns
-
-Each mood has associated chord progression patterns. Here are some examples:
-
+#### Open Position
 ```
-Happy:
-- I → IV → V → I
-- I → VI → IV → V
-- I → IV → I → V
-
-Sad:
-- I → VI → IV → V
-- VI → IV → I → V
-- I → III → VI → IV
-
-Epic:
-- I → V → VI → IV
-- I → bVII → VI → V
-- I → III → VI → VII
-
-Mysterious:
-- I → bII → IV → bVII
-- I → VI → III → VII
-- I → V → bVII → IV
+Example: C (low) - G - E (high)
+Use when:
+- Solo piano
+- Need fuller sound
+- More space in arrangement
 ```
+
+#### Drop Voicings
+```
+Drop 2: Take second note from top, lower by octave
+Original: C E G B
+Drop 2: C G B E
+Use in: Jazz comping, guitar arrangements
+```
+
+### Creative Applications
+
+#### Practice Techniques
+1. Generate a progression in your chosen mood
+2. Practice it using different approaches:
+   * Block chords
+   * Broken (arpeggiated)
+   * Bass line with upper structure
+   * Different rhythmic patterns
+
+#### Style Adaptations
+
+**Pop/Rock**
+* Keep voicings simple and clear
+* Emphasize root and fifth
+* Use rhythmic patterns
+* Stay mostly in root position
+
+**Jazz**
+* Use extended harmonies
+* Experiment with drop voicings
+* Add passing chords
+* Explore alterations
+
+**Classical**
+* Focus on voice leading
+* Use inversions for smooth bass lines
+* Create melodic interest in all voices
+* Balance texture across register
+
+**Ambient/Modern**
+* Spread voicings widely
+* Remove certain chord tones
+* Use sustain creatively
+* Create ambiguous harmonies
+
+### Voice Leading Tips
+* Connect common tones between chords
+* Move voices to nearest available notes
+* Create smooth bass lines through inversions
+* Balance voice movement with stability
 
 ## Advanced Usage
 
-### 1. Complex Mode Features
-When complex mode is enabled:
-- Out-of-scale alterations are introduced
-- Complementary scale notes are incorporated
-- Chromatic alterations are applied
-- Enhanced harmonic variety through modal mixture
+### Modulation Techniques
+1. Use the fifth up (purple) for dominant modulation
+2. Use fourth down (orange) for subdominant modulation
+3. Try generating progressions in complementary keys
+4. Connect progressions through common chords
 
-### 2. Chord Substitution System
-The tool includes a sophisticated chord substitution system for progression variation:
-```javascript
-Substitution Options:
-I   → [I, III, VI]
-IV  → [IV, II, VI]
-V   → [V, VII, III]
-VI  → [VI, IV, II]
-II  → [II, IV, VII]
-III → [III, VI, I]
-VII → [VII, V, III]
-```
+### Chord Substitutions
+* Replace V with VII diminished
+* Use relative minor/major relationships
+* Explore chromatic mediants
+* Try secondary dominants
 
-### 3. Audio Engine Features
-- Oscillator-based sound synthesis
-- Envelope shaping for natural sound decay
-- Polyphonic chord playback
-- Different octave handling for bass notes
-- Variable note duration based on context
+## Final Notes
 
-## Best Practices
+Remember that this tool is meant to inspire and educate. The generated progressions are starting points – real musicality comes from how you adapt and use these ideas in your own playing. Experiment with different voicings, rhythms, and adaptations to find what works best for your musical vision.
 
-1. Scale Exploration:
-   - Start with major and minor scales before exploring exotic ones
-   - Use the color-coding system to understand scale relationships
-   - Experiment with different keys to understand transposition
-
-2. Chord Progression Creation:
-   - Begin with simple progressions (4 chords)
-   - Add complexity gradually through chord extensions
-   - Use the mood selector to match your musical intention
-   - Listen to the relationship between complementary keys
-
-3. Advanced Composition:
-   - Combine different moods for verse/chorus structures
-   - Use complex mode sparingly for specific effects
-   - Experiment with chord substitutions for variation
-   - Pay attention to voice leading in extended chords
-
-## Troubleshooting
-
-Common Issues and Solutions:
-1. No sound output:
-   - Check browser audio permissions
-   - Ensure audio context is initialized
-   - Verify system audio settings
-
-2. Visual display issues:
-   - Refresh the page to reset the keyboard state
-   - Check browser compatibility
-   - Clear browser cache if colors aren't updating
-
-3. Progression generation:
-   - Reduce chord count if progressions seem too complex
-   - Disable advanced modes for simpler patterns
-   - Reset to default settings if results are unexpected
-
-## Technical Specifications
-
-- Audio: Web Audio API
-- Frequency range: 261.63 Hz (C4) to 987.77 Hz (B5)
-- Supported browsers: Modern versions of Chrome, Firefox, Safari, Edge
-- Scale types: 19 different scale patterns
-- Chord types: 12 basic and extended variations
-- Progression patterns: 27 base patterns across 9 moods
+Use the visual feedback of the keyboard to understand theoretical relationships, but let your ear be the final judge of what sounds right for your music.
