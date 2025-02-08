@@ -690,8 +690,24 @@
             
             createKeyboard();
             
-            scaleSelect.addEventListener('change', updateKeyboard);
-            keySelect.addEventListener('change', updateKeyboard);
+            // Update when scale changes
+            scaleSelect.addEventListener('change', () => {
+                updateKeyboard();
+                const progressionOutput = document.getElementById('progressionOutput');
+                if (progressionOutput.textContent.trim() !== '') {
+                    // Regenerate the progression with new scale
+                    generateProgression();
+                }
+            });
+            
+            // Update when key changes
+            keySelect.addEventListener('change', () => {
+                updateKeyboard();
+                const progressionOutput = document.getElementById('progressionOutput');
+                if (progressionOutput.textContent.trim() !== '') {
+                    updateExistingProgression(keySelect.value);
+                }
+            });
             
             updateKeyboard();
         }
@@ -1012,6 +1028,8 @@
             const fourthNotes = getFourthNote(baseKey);
             
             const note = key.dataset.note;
+            const isSecondOctave = note.endsWith('2');
+            
             if (note === baseKey || note === baseKey + '2') {
                 key.style.backgroundColor = 'var(--root-color)';
             } else if (fifthNotes.includes(note)) {
@@ -1021,7 +1039,7 @@
             } else if (scaleNotes.includes(note)) {
                 key.style.backgroundColor = 'var(--scale-color)';
             } else {
-                key.style.backgroundColor = key.dataset.originalColor;
+                key.style.backgroundColor = key.classList.contains('white') ? 'white' : '#333';
             }
         }
 
@@ -1113,9 +1131,11 @@
 
         function getScaleNotes(key, intervals) {
             const keyIndex = NOTES.indexOf(key);
+            // Get first octave
             const firstOctave = intervals.map(interval => 
                 NOTES[(keyIndex + interval) % 12]
             );
+            // Get second octave
             const secondOctave = intervals.map(interval => 
                 NOTES[(keyIndex + interval) % 12] + '2'
             );
@@ -1136,77 +1156,60 @@
             return [firstOctave, secondOctave];
         }
 
-        function getChordNotes(root, degree, type, modes) {
-            const scale = document.getElementById('scale').value;
-            const key = document.getElementById('key').value;
+        function getChordNotes(root, degree, type, modes, scale, key) {
+            // Get all notes in the current scale
             const scaleNotes = getScaleNotes(key, SCALES[scale]);
             const rootIndex = NOTES.indexOf(root);
             let intervals;
-            
-            if (modes.seventh) {
-                intervals = CHORD_TYPES.seventh[degree];
-            } else if (modes.advanced) {
-                const advancedTypes = Object.keys(CHORD_TYPES.advanced);
-                const randomType = advancedTypes[Math.floor(Math.random() * advancedTypes.length)];
-                intervals = CHORD_TYPES.advanced[randomType];
+
+            if (modes.complex) {
+                // In complex mode, we can use notes outside the scale
+                if (modes.seventh) {
+                    intervals = CHORD_TYPES.seventh[degree];
+                } else if (modes.advanced) {
+                    const advancedTypes = Object.keys(CHORD_TYPES.advanced);
+                    const randomType = advancedTypes[Math.floor(Math.random() * advancedTypes.length)];
+                    intervals = CHORD_TYPES.advanced[randomType];
+                } else {
+                    intervals = type.includes('m') ? CHORD_TYPES.basic.minor :
+                            type.includes('dim') ? CHORD_TYPES.basic.diminished :
+                            type.includes('aug') ? CHORD_TYPES.basic.augmented :
+                            CHORD_TYPES.basic.major;
+                }
+                return intervals.map(interval => NOTES[(rootIndex + interval) % 12]);
             } else {
-                intervals = type.includes('m') ? CHORD_TYPES.basic.minor :
-                        type.includes('dim') ? CHORD_TYPES.basic.diminished :
-                        type.includes('aug') ? CHORD_TYPES.basic.augmented :
-                        CHORD_TYPES.basic.major;
+                // When not in complex mode, strictly use scale notes
+                let chordNotes = [root]; // Start with root note
+                let noteIndex = scaleNotes.indexOf(root);
+                
+                // Find the next scale note that's 2 scale degrees up
+                for (let i = 1; i < scaleNotes.length; i++) {
+                    const nextIndex = (noteIndex + 2) % scaleNotes.length;
+                    chordNotes.push(scaleNotes[nextIndex]);
+                    noteIndex = nextIndex;
+                    
+                    // Break after we have 3 notes (triad) or 4 notes (seventh chord)
+                    if (modes.seventh && chordNotes.length === 4) break;
+                    if (!modes.seventh && chordNotes.length === 3) break;
+                }
+                
+                return chordNotes;
             }
-            
-            // If not in complex mode, ensure all notes are in scale
-            if (!modes.complex) {
-                return intervals.map(interval => {
-                    const note = NOTES[(rootIndex + interval) % 12];
-                    // Find the nearest scale note if the calculated note isn't in scale
-                    if (!scaleNotes.includes(note)) {
-                        const noteIndex = NOTES.indexOf(note);
-                        // Try notes above and below until finding one in scale
-                        for (let i = 1; i < 12; i++) {
-                            const upperNote = NOTES[(noteIndex + i) % 12];
-                            const lowerNote = NOTES[(noteIndex - i + 12) % 12];
-                            if (scaleNotes.includes(upperNote)) return upperNote;
-                            if (scaleNotes.includes(lowerNote)) return lowerNote;
-                        }
-                    }
-                    return note;
-                });
-            }
-            
-            return intervals.map(interval => NOTES[(rootIndex + interval) % 12]);
         }
 
-        function getExtendedChordNotes(root, degree, type, modes) {
-            const rootIndex = NOTES.indexOf(root);
-            let intervals;
+        function getExtendedChordNotes(root, degree, type, modes, scale, key) {
+            // Similar to getChordNotes but handles octave notation
+            const baseNotes = getChordNotes(root, degree, type, modes, scale, key);
             
-            if (modes.seventh) {
-                intervals = CHORD_TYPES.seventh[degree];
-            } else if (modes.advanced) {
-                const advancedTypes = Object.keys(CHORD_TYPES.advanced);
-                const randomType = advancedTypes[Math.floor(Math.random() * advancedTypes.length)];
-                intervals = CHORD_TYPES.advanced[randomType];
-            } else {
-                intervals = type.includes('m') ? CHORD_TYPES.basic.minor :
-                        type.includes('dim') ? CHORD_TYPES.basic.diminished :
-                        type.includes('aug') ? CHORD_TYPES.basic.augmented :
-                        CHORD_TYPES.basic.major;
-            }
-            
-            // Map intervals to notes across both octaves
-            return intervals.map((interval, index) => {
-                const noteIndex = (rootIndex + interval) % 12;
-                // For seventh chords, only the seventh goes to upper octave
-                const useSecondOctave = (intervals.length === 4 && index === 3) || 
-                                    // For 9th and 11th chords, put extensions in upper octave
-                                    (intervals.length > 4 && index >= 3);
-                return NOTES[noteIndex] + (useSecondOctave ? '2' : '');
+            return baseNotes.map((note, index) => {
+                // Add octave notation for higher notes
+                const useSecondOctave = (baseNotes.length === 4 && index === 3) || 
+                                    (baseNotes.length > 4 && index >= 3);
+                return note + (useSecondOctave ? '2' : '');
             });
         }
 
-        function generateExtendedProgression(basePattern, chordCount, mood) {
+        function generateExtendedProgression(basePattern, chordCount, mood, scale) {
             if (chordCount <= basePattern.length) {
                 return basePattern.slice(0, chordCount);
             }
@@ -1214,29 +1217,59 @@
             let progression = [...basePattern];
             const moodPatterns = MOOD_PROGRESSIONS[mood].patterns;
             
+            // Adjust patterns based on scale characteristics
+            const adjustPatternsForScale = (patterns) => {
+                // For minor-type scales, adjust major patterns to minor equivalents
+                if (['minor', 'harmonic_minor', 'melodic_minor', 'phrygian', 'locrian'].includes(scale)) {
+                    return patterns.map(pattern => 
+                        pattern.map(chord => {
+                            // Convert major degrees to minor where appropriate
+                            if (chord === 'I') return 'i';
+                            if (chord === 'IV') return 'iv';
+                            if (chord === 'V') return 'v';
+                            return chord;
+                        })
+                    );
+                }
+                return patterns;
+            };
+
+            const adjustedPatterns = adjustPatternsForScale(moodPatterns);
+            
             while (progression.length < chordCount) {
                 let nextPattern;
                 do {
-                    nextPattern = moodPatterns[Math.floor(Math.random() * moodPatterns.length)];
-                } while (nextPattern === basePattern && moodPatterns.length > 1);
+                    nextPattern = adjustedPatterns[Math.floor(Math.random() * adjustedPatterns.length)];
+                } while (nextPattern === basePattern && adjustedPatterns.length > 1);
                 
-                const variation = generateVariation(nextPattern, mood);
+                const variation = generateVariation(nextPattern, mood, scale);
                 progression = progression.concat(variation);
             }
             
             return progression.slice(0, chordCount);
         }
 
-        function generateVariation(pattern, mood) {
+        function generateVariation(pattern, mood, scale) {
             const substitutions = {
+                // Major scale substitutions
                 'I': ['I', 'III', 'VI'],
                 'IV': ['IV', 'II', 'VI'],
                 'V': ['V', 'VII', 'III'],
                 'VI': ['VI', 'IV', 'II'],
                 'II': ['II', 'IV', 'VII'],
                 'III': ['III', 'VI', 'I'],
-                'VII': ['VII', 'V', 'III']
+                'VII': ['VII', 'V', 'III'],
+                // Minor scale substitutions
+                'i': ['i', 'III', 'VI'],
+                'iv': ['iv', 'II', 'VI'],
+                'v': ['v', 'VII', 'III'],
+                'vi': ['VI', 'iv', 'ii'],
+                'ii': ['ii', 'iv', 'vii'],
+                'iii': ['III', 'vi', 'i'],
+                'vii': ['vii', 'v', 'iii']
             };
+
+            const isMinorScale = ['minor', 'harmonic_minor', 'melodic_minor', 'phrygian', 'locrian'].includes(scale);
             
             return pattern.map(chord => {
                 if (Math.random() < 0.3 && substitutions[chord]) {
@@ -1248,6 +1281,7 @@
         }
 
         function generateProgression() {
+            // Clear any existing progression playback
             if (progressionInterval) {
                 clearInterval(progressionInterval);
                 progressionInterval = null;
@@ -1267,42 +1301,87 @@
             
             const moodPatterns = MOOD_PROGRESSIONS[mood].patterns;
             const basePattern = moodPatterns[Math.floor(Math.random() * moodPatterns.length)];
-            const progression = generateExtendedProgression(basePattern, chordCount, mood);
+            const progression = generateExtendedProgression(basePattern, chordCount, mood, scale);
             
             const scaleNotes = getScaleNotes(key, SCALES[scale]);
             const fifthKey = NOTES[(NOTES.indexOf(key) + 7) % 12];
             const complementaryNotes = getScaleNotes(fifthKey, SCALES[scale]);
+            const fourthKey = NOTES[(NOTES.indexOf(key) + 5) % 12];
+            const fourthNotes = getScaleNotes(fourthKey, SCALES[scale]);
+            
             const chords = [];
             const chordDetails = [];
             
             progression.forEach(degree => {
-            const rootIndex = romanToNumber(degree);
-            let chordRoot = scaleNotes[rootIndex % scaleNotes.length];
+                const rootIndex = romanToNumber(degree);
+                let chordRoot = scaleNotes[rootIndex % scaleNotes.length];
+                
+                // Only allow non-scale notes in complex mode
+                if (modes.complex) {
+                    if (Math.random() < 0.4) {
+                        // 40% chance to use a note from complementary or fourth key
+                        if (Math.random() < 0.5) {
+                            // Use note from fifth key (complementary)
+                            const complementaryNote = complementaryNotes[Math.floor(Math.random() * complementaryNotes.length)];
+                            if (!scaleNotes.includes(complementaryNote)) {
+                                chordRoot = complementaryNote;
+                            }
+                        } else {
+                            // Use note from fourth key
+                            const fourthNote = fourthNotes[Math.floor(Math.random() * fourthNotes.length)];
+                            if (!scaleNotes.includes(fourthNote)) {
+                                chordRoot = fourthNote;
+                            }
+                        }
+                    }
+                }
+                
+                const chordType = getChordQuality(degree, scale);
+                const notes = getExtendedChordNotes(chordRoot, degree, chordType, modes, scale, key);
+                
+                let chordSymbol = chordRoot + chordType;
+                if (modes.advanced || modes.seventh) {
+                    chordSymbol += notes.length > 3 ? 
+                        (notes.length === 4 ? '7' : 
+                        notes.length === 5 ? '9' : 
+                        '11') : '';
+                }
+                
+                // Get proper chord name based on actual notes used
+                const chordName = getChordNameFromNotes(notes, chordSymbol);
+                
+                chords.push(chordName);
+                chordDetails.push({
+                    symbol: chordName,
+                    notes: notes,
+                    degree: degree
+                });
+            });
             
-            // Use scale parameter when getting chord quality
-            const chordType = getChordQuality(degree, scale);
-            const notes = getExtendedChordNotes(chordRoot, degree, chordType, modes);
+            updateProgressionDisplay(chords, chordDetails, key, fifthKey);
             
-            let chordSymbol = chordRoot + chordType;
-            if (modes.advanced || modes.seventh) {
-                chordSymbol += notes.length > 3 ? (notes.length === 4 ? '7' : notes.length === 5 ? '9' : '11') : '';
+            // Reset any active play states
+            const playButton = document.getElementById('playProgressionBtn');
+            if (playButton) {
+                playButton.textContent = '▶ Play';
+                playButton.classList.remove('playing');
             }
             
-            chords.push(chordSymbol);
-            chordDetails.push({
-                symbol: chordSymbol,
-                notes: notes,
-                degree: degree
+            // Reset key highlighting
+            document.querySelectorAll('.key').forEach(key => {
+                updateKeyColor(key);
             });
-        });
-        
-        updateProgressionDisplay(chords, chordDetails, key, fifthKey);
-    }
+            
+            // Remove any active chord highlighting
+            document.querySelectorAll('.chord-item').forEach(item => {
+                item.classList.remove('playing');
+            });
+        }
 
         function updateProgressionDisplay(chords, chordDetails, key, fifthKey) {
             const outputEl = document.getElementById('progressionOutput');
             outputEl.innerHTML = '';
-            
+
             const keysDiv = document.createElement('div');
             keysDiv.className = 'progression-keys';
             keysDiv.innerHTML = `
@@ -1319,22 +1398,25 @@
                 </div>
             `;
             outputEl.appendChild(keysDiv);
-            
+
             const chordListDiv = document.createElement('div');
             chordListDiv.className = 'chord-list';
-            
+
             chordDetails.forEach((chord, i) => {
                 const chordDiv = document.createElement('div');
                 chordDiv.className = 'chord-item';
-                
+
+                // Get proper chord name based on notes
+                const chordName = getChordNameFromNotes(chord.notes, chord.symbol);
+
                 const chordSymbol = document.createElement('div');
                 chordSymbol.className = 'chord-symbol';
-                chordSymbol.textContent = `Chord ${i + 1} (${chord.degree}): ${chord.symbol}`;
-                
+                chordSymbol.textContent = `Chord ${i + 1} (${chord.degree}): ${chordName}`;
+
                 const chordNotes = document.createElement('div');
                 chordNotes.className = 'chord-notes';
                 chordNotes.textContent = `Notes: ${chord.notes.join(', ')}`;
-                
+
                 const playButton = document.createElement('button');
                 playButton.className = 'play-chord-button';
                 playButton.textContent = '▶ Play';
@@ -1405,6 +1487,61 @@
             playControlsContainer.appendChild(playButton);
             
             outputEl.appendChild(playControlsContainer);
+        }
+
+        function getChordNameFromNotes(notes, defaultSymbol) {
+            // Remove octave numbers for analysis
+            const baseNotes = notes.map(note => note.replace('2', ''));
+            const root = baseNotes[0];
+            
+            // Calculate intervals from root
+            const intervals = baseNotes.slice(1).map(note => {
+                const rootIndex = NOTES.indexOf(root);
+                const noteIndex = NOTES.indexOf(note);
+                return (noteIndex - rootIndex + 12) % 12;
+            });
+
+            // Common chord interval patterns
+            const chordPatterns = {
+                // Major triad
+                '4,7': '',
+                // Minor triad
+                '3,7': 'm',
+                // Diminished triad
+                '3,6': 'dim',
+                // Augmented triad
+                '4,8': 'aug',
+                // Major seventh
+                '4,7,11': 'maj7',
+                // Minor seventh
+                '3,7,10': 'm7',
+                // Dominant seventh
+                '4,7,10': '7',
+                // Half diminished seventh
+                '3,6,10': 'm7b5',
+                // Diminished seventh
+                '3,6,9': 'dim7',
+                // Major ninth
+                '4,7,11,14': 'maj9',
+                // Minor ninth
+                '3,7,10,14': 'm9',
+                // Dominant ninth
+                '4,7,10,14': '9',
+                // Major eleventh
+                '4,7,11,14,17': 'maj11',
+                // Minor eleventh
+                '3,7,10,14,17': 'm11'
+            };
+
+            const intervalKey = intervals.join(',');
+            const quality = chordPatterns[intervalKey];
+
+            if (quality !== undefined) {
+                return root + quality;
+            }
+
+            // If no match found, return the default symbol
+            return defaultSymbol;
         }
 
         function updateExistingProgression(newKey) {
