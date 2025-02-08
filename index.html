@@ -158,6 +158,10 @@
             width: 490px; /* Fixed width to accommodate all keys */
             border: 1px solid var(--border-color);
             margin: 0 auto;
+            touch-action: none;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
         }
 
         /* Container for the actual keys */
@@ -173,7 +177,11 @@
             border-radius: 0 0 4px 4px;
             cursor: pointer;
             transition: transform 0.15s ease, background-color 0.3s ease;
-            touch-action: manipulation;
+            touch-action: none;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .white {
@@ -851,24 +859,45 @@
         function arrangeNotesLinearly(notes) {
             // First, normalize all notes to their base form (without octave)
             const baseNotes = notes.map(note => note.replace('2', ''));
-            
-            // Get unique base notes to avoid duplicates
             const uniqueBaseNotes = [...new Set(baseNotes)];
             
-            // Create the linear voicing
-            const voicedNotes = [];
-            uniqueBaseNotes.forEach((note, index) => {
-                // For triads (3 notes or less), keep all notes in the lower octave
-                if (uniqueBaseNotes.length <= 3) {
-                    voicedNotes.push(note);
-                } else {
-                    // For extended chords (7th, 9th, etc.), distribute between octaves
-                    // First three notes in lower octave, rest in upper octave
-                    if (index < 3) {
-                        voicedNotes.push(note);
-                    } else {
-                        voicedNotes.push(note + '2');
+            // Get the root note (first note) and its index
+            const rootNote = uniqueBaseNotes[0];
+            const rootIndex = NOTES.indexOf(rootNote);
+            
+            // Sort remaining notes by their interval from the root
+            const remainingNotes = uniqueBaseNotes.slice(1).sort((a, b) => {
+                const aInterval = (NOTES.indexOf(a) - rootIndex + 12) % 12;
+                const bInterval = (NOTES.indexOf(b) - rootIndex + 12) % 12;
+                return aInterval - bInterval;
+            });
+            
+            // Start with root note
+            const voicedNotes = [rootNote];
+            
+            // Handle all additional notes with the same wrap-around logic
+            remainingNotes.forEach(note => {
+                const noteIndex = NOTES.indexOf(note);
+                let shouldBeUpperOctave = false;
+                
+                // If this note's index is less than root, it wrapped around
+                if (noteIndex < rootIndex) {
+                    shouldBeUpperOctave = true;
+                }
+                // For notes after root, check if they're too far ahead
+                else {
+                    const interval = (noteIndex - rootIndex + 12) % 12;
+                    // If adding this interval to root position would exceed octave
+                    if (rootIndex + interval >= 12) {
+                        shouldBeUpperOctave = true;
                     }
+                }
+                
+                // Add the note with or without octave marking
+                if (shouldBeUpperOctave && NOTE_FREQUENCIES[note + '2']) {
+                    voicedNotes.push(note + '2');
+                } else {
+                    voicedNotes.push(note);
                 }
             });
             
@@ -950,17 +979,8 @@
                     // Store original color
                     key.dataset.originalColor = 'white';
                     
-                    // Add event listeners...
-                    key.addEventListener('mousedown', () => {
-                        playNote(key.dataset.note);
-                        key.style.backgroundColor = 'var(--key-active)';
-                        key.style.boxShadow = '0 0 10px var(--key-active)';
-                    });
-                    
-                    key.addEventListener('mouseup', () => {
-                        key.style.backgroundColor = key.dataset.originalColor;
-                        key.style.boxShadow = 'none';
-                    });
+                    // Add touch and mouse event listeners
+                    addKeyEventListeners(key);
                     
                     keyboard.appendChild(key);
                 });
@@ -976,21 +996,75 @@
                     // Store original color
                     key.dataset.originalColor = '#333';
                     
-                    // Add event listeners...
-                    key.addEventListener('mousedown', () => {
-                        playNote(key.dataset.note);
-                        key.style.backgroundColor = 'var(--key-active)';
-                        key.style.boxShadow = '0 0 10px var(--key-active)';
-                    });
-                    
-                    key.addEventListener('mouseup', () => {
-                        key.style.backgroundColor = key.dataset.originalColor;
-                        key.style.boxShadow = 'none';
-                    });
+                    // Add touch and mouse event listeners
+                    addKeyEventListeners(key);
                     
                     keyboard.appendChild(key);
                 });
             }
+        }
+
+        function updateKeyColor(key) {
+            const scale = document.getElementById('scale').value;
+            const baseKey = document.getElementById('key').value;
+            const scaleNotes = getScaleNotes(baseKey, SCALES[scale]);
+            const fifthNotes = getFifthNote(baseKey);
+            const fourthNotes = getFourthNote(baseKey);
+            
+            const note = key.dataset.note;
+            if (note === baseKey || note === baseKey + '2') {
+                key.style.backgroundColor = 'var(--root-color)';
+            } else if (fifthNotes.includes(note)) {
+                key.style.backgroundColor = 'var(--fifth-color)';
+            } else if (fourthNotes.includes(note)) {
+                key.style.backgroundColor = 'var(--fourth-color)';
+            } else if (scaleNotes.includes(note)) {
+                key.style.backgroundColor = 'var(--scale-color)';
+            } else {
+                key.style.backgroundColor = key.dataset.originalColor;
+            }
+        }
+
+        function addKeyEventListeners(key) {
+            // Track if the key is currently being pressed
+            let isPressed = false;
+            
+            // Function to handle key press
+            const handleKeyPress = (e) => {
+                if (!isPressed) {
+                    isPressed = true;
+                    playNote(key.dataset.note);
+                    key.style.backgroundColor = 'var(--key-active)';
+                    key.style.boxShadow = '0 0 10px var(--key-active)';
+                    key.style.transform = 'translateY(2px)';
+                }
+                // Prevent default behavior to avoid unwanted effects
+                e.preventDefault();
+            };
+            
+            // Function to handle key release
+            const handleKeyRelease = () => {
+                if (isPressed) {
+                    isPressed = false;
+                    // Reset key appearance
+                    updateKeyColor(key);
+                    key.style.boxShadow = 'none';
+                    key.style.transform = 'translateY(0)';
+                }
+            };
+            
+            // Mouse events
+            key.addEventListener('mousedown', handleKeyPress);
+            key.addEventListener('mouseup', handleKeyRelease);
+            key.addEventListener('mouseleave', handleKeyRelease);
+            
+            // Touch events
+            key.addEventListener('touchstart', handleKeyPress, { passive: false });
+            key.addEventListener('touchend', handleKeyRelease);
+            key.addEventListener('touchcancel', handleKeyRelease);
+            
+            // Prevent context menu on long press
+            key.addEventListener('contextmenu', (e) => e.preventDefault());
         }
 
         function updateKeyboard() {
@@ -1063,6 +1137,9 @@
         }
 
         function getChordNotes(root, degree, type, modes) {
+            const scale = document.getElementById('scale').value;
+            const key = document.getElementById('key').value;
+            const scaleNotes = getScaleNotes(key, SCALES[scale]);
             const rootIndex = NOTES.indexOf(root);
             let intervals;
             
@@ -1077,6 +1154,25 @@
                         type.includes('dim') ? CHORD_TYPES.basic.diminished :
                         type.includes('aug') ? CHORD_TYPES.basic.augmented :
                         CHORD_TYPES.basic.major;
+            }
+            
+            // If not in complex mode, ensure all notes are in scale
+            if (!modes.complex) {
+                return intervals.map(interval => {
+                    const note = NOTES[(rootIndex + interval) % 12];
+                    // Find the nearest scale note if the calculated note isn't in scale
+                    if (!scaleNotes.includes(note)) {
+                        const noteIndex = NOTES.indexOf(note);
+                        // Try notes above and below until finding one in scale
+                        for (let i = 1; i < 12; i++) {
+                            const upperNote = NOTES[(noteIndex + i) % 12];
+                            const lowerNote = NOTES[(noteIndex - i + 12) % 12];
+                            if (scaleNotes.includes(upperNote)) return upperNote;
+                            if (scaleNotes.includes(lowerNote)) return lowerNote;
+                        }
+                    }
+                    return note;
+                });
             }
             
             return intervals.map(interval => NOTES[(rootIndex + interval) % 12]);
@@ -1102,8 +1198,9 @@
             // Map intervals to notes across both octaves
             return intervals.map((interval, index) => {
                 const noteIndex = (rootIndex + interval) % 12;
-                // Use second octave only for higher intervals in extended chords
-                const useSecondOctave = (intervals.length > 3 && index >= 2) || 
+                // For seventh chords, only the seventh goes to upper octave
+                const useSecondOctave = (intervals.length === 4 && index === 3) || 
+                                    // For 9th and 11th chords, put extensions in upper octave
                                     (intervals.length > 4 && index >= 3);
                 return NOTES[noteIndex] + (useSecondOctave ? '2' : '');
             });
