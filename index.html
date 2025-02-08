@@ -1279,20 +1279,8 @@
             const rootIndex = romanToNumber(degree);
             let chordRoot = scaleNotes[rootIndex % scaleNotes.length];
             
-            if (modes.complex && Math.random() < 0.4) {
-                if (Math.random() < 0.5) {
-                    const complementaryNote = complementaryNotes[Math.floor(Math.random() * complementaryNotes.length)];
-                    if (!scaleNotes.includes(complementaryNote)) {
-                        chordRoot = complementaryNote;
-                    }
-                } else {
-                    const alteration = [-1, 1][Math.floor(Math.random() * 2)];
-                    const rootNoteIndex = NOTES.indexOf(chordRoot);
-                    chordRoot = NOTES[(rootNoteIndex + alteration + 12) % 12];
-                }
-            }
-            
-            const chordType = getChordQuality(degree);
+            // Use scale parameter when getting chord quality
+            const chordType = getChordQuality(degree, scale);
             const notes = getExtendedChordNotes(chordRoot, degree, chordType, modes);
             
             let chordSymbol = chordRoot + chordType;
@@ -1434,9 +1422,19 @@
                 complex: document.getElementById('complexMode').checked
             };
             
+            // Update the keys display section
             const keysDiv = outputEl.querySelector('.progression-keys');
             if (keysDiv) {
-                keysDiv.textContent = `Base Key: ${newKey}  -  Complementary Key: ${fifthKey}`;
+                const keyInfoHTML = `
+                    <div class="progression-info">
+                        <span class="progression-label">Base Key:</span>
+                        <span class="progression-value">${newKey}</span>
+                        <span class="progression-separator">|</span>
+                        <span class="progression-label">Complementary Key:</span>
+                        <span class="progression-value">${fifthKey}</span>
+                    </div>
+                `;
+                keysDiv.innerHTML = keyInfoHTML;
             }
             
             const newChords = [];
@@ -1444,30 +1442,42 @@
                 const chordSymbolEl = item.querySelector('.chord-symbol');
                 const chordText = chordSymbolEl.textContent;
                 const degreeMatch = chordText.match(/\((.*?)\)/);
+                
                 if (degreeMatch) {
                     const degree = degreeMatch[1];
                     const rootIndex = romanToNumber(degree);
                     const scaleNotes = getScaleNotes(newKey, SCALES[scale]);
                     let chordRoot = scaleNotes[rootIndex % scaleNotes.length];
                     
-                    const chordType = getChordQuality(degree);
-                    const notes = getChordNotes(chordRoot, degree, chordType, modes);
+                    // Get the chord quality based on both degree and scale
+                    const chordType = getChordQuality(degree, scale);
+                    const notes = getExtendedChordNotes(chordRoot, degree, chordType, modes);
                     
                     let chordSymbol = chordRoot + chordType;
                     if (modes.advanced || modes.seventh) {
-                        chordSymbol += notes.length > 3 ? (notes.length === 4 ? '7' : notes.length === 5 ? '9' : '11') : '';
+                        chordSymbol += notes.length > 3 ? 
+                            (notes.length === 4 ? '7' : 
+                            notes.length === 5 ? '9' : 
+                            '11') : '';
                     }
                     
                     newChords.push(chordSymbol);
                     
-                    chordSymbolEl.textContent = `Chord ${Array.from(chordItems).indexOf(item) + 1} (${degree}): ${chordSymbol}`;
-                    item.querySelector('.chord-notes').textContent = `Notes: ${notes.join(', ')}`;
+                    // Update the display for this chord
+                    const chordNumber = Array.from(chordItems).indexOf(item) + 1;
+                    chordSymbolEl.textContent = `Chord ${chordNumber} (${degree}): ${chordSymbol}`;
+                    
+                    const chordNotesEl = item.querySelector('.chord-notes');
+                    if (chordNotesEl) {
+                        chordNotesEl.textContent = `Notes: ${notes.join(', ')}`;
+                    }
                 }
             });
             
-            const sequenceDiv = outputEl.querySelector('.progression-sequence');
+            // Update the progression sequence display
+            const sequenceDiv = outputEl.querySelector('.progression-chain');
             if (sequenceDiv) {
-                sequenceDiv.textContent = `Progression: ${newChords.join(' → ')}`;
+                sequenceDiv.innerHTML = newChords.join('<span class="progression-arrow">→</span>');
             }
         }
 
@@ -1479,11 +1489,52 @@
             return numerals[roman] || 0;
         }
 
-        function getChordQuality(degree) {
-            if (degree.startsWith('b')) {
-                return 'm';
-            }
-            return ['I', 'IV', 'V'].includes(degree) ? '' : 'm';
+        function getChordQuality(degree, scale) {
+            // Define chord qualities for different scales
+            const scaleQualities = {
+                'major': {
+                    'I': '', 'II': 'm', 'III': 'm', 'IV': '', 'V': '', 'VI': 'm', 'VII': 'dim',
+                    'bII': 'm', 'bIII': 'm', 'bV': 'm', 'bVI': 'm', 'bVII': 'm'
+                },
+                'minor': {
+                    'I': 'm', 'II': 'dim', 'III': '', 'IV': 'm', 'V': 'm', 'VI': '', 'VII': '',
+                    'bII': 'm', 'bIII': '', 'bV': 'm', 'bVI': '', 'bVII': ''
+                },
+                'harmonic_minor': {
+                    'I': 'm', 'II': 'dim', 'III': '', 'IV': 'm', 'V': '', 'VI': '', 'VII': 'dim',
+                    'bII': 'm', 'bIII': '', 'bV': '', 'bVI': '', 'bVII': ''
+                },
+                'melodic_minor': {
+                    'I': 'm', 'II': 'm', 'III': '', 'IV': '', 'V': '', 'VI': 'dim', 'VII': 'dim',
+                    'bII': 'm', 'bIII': '', 'bV': '', 'bVI': 'dim', 'bVII': 'dim'
+                },
+                'dorian': {
+                    'I': 'm', 'II': 'm', 'III': '', 'IV': '', 'V': 'm', 'VI': 'dim', 'VII': '',
+                    'bII': 'm', 'bIII': '', 'bV': 'm', 'bVI': 'dim', 'bVII': ''
+                },
+                'phrygian': {
+                    'I': 'm', 'II': '', 'III': '', 'IV': 'm', 'V': 'dim', 'VI': '', 'VII': 'm',
+                    'bII': '', 'bIII': '', 'bV': 'dim', 'bVI': '', 'bVII': 'm'
+                },
+                'lydian': {
+                    'I': '', 'II': '', 'III': 'm', 'IV': 'dim', 'V': '', 'VI': 'm', 'VII': 'm',
+                    'bII': '', 'bIII': 'm', 'bV': '', 'bVI': 'm', 'bVII': 'm'
+                },
+                'mixolydian': {
+                    'I': '', 'II': 'm', 'III': 'dim', 'IV': '', 'V': 'm', 'VI': 'm', 'VII': '',
+                    'bII': 'm', 'bIII': 'dim', 'bV': 'm', 'bVI': 'm', 'bVII': ''
+                },
+                'locrian': {
+                    'I': 'dim', 'II': '', 'III': 'm', 'IV': 'm', 'V': '', 'VI': '', 'VII': 'm',
+                    'bII': '', 'bIII': 'm', 'bV': '', 'bVI': '', 'bVII': 'm'
+                }
+            };
+
+            // Default to major scale qualities if scale not found
+            const scaleType = scale.toLowerCase();
+            const qualities = scaleQualities[scaleType] || scaleQualities.major;
+            
+            return qualities[degree] || '';
         }
 
         // Initialize the application
