@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mabel's Theory</title>
+    <title>Sierra's Theory</title>
     <meta name="theme-color" content="#121212">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Mabel's Theory">
+    <meta name="apple-mobile-web-app-title" content="Sierra's Theory">
     <style>
         :root {
             --bg-primary: #121212;
@@ -773,9 +773,9 @@
 <!-- Web app manifest inline -->
 <script type="application/json" id="pwaManifest">
     {
-        "name": "Mabel's Theory",
-        "short_name": "Mabel's Theory",
-        "description": "Music Theory & Chord Progression Tool",
+        "name": "Sierra's Theory",
+        "short_name": "Sierra's Theory",
+        "description": "Theory sketchpad for magical tunes",
         "start_url": "./index.html",
         "display": "standalone",
         "background_color": "#121212",
@@ -809,8 +809,8 @@
         <!-- App Header -->
         <header class="app-header">
             <div>
-                <h1 class="app-title">Mabel's Theory</h1>
-                <p class="app-subtitle">Music Theory & Chord Progression Tool</p>
+                <h1 class="app-title">Sierra's Theory</h1>
+                <p class="app-subtitle">Theory sketchpad for magical tunes</p>
             </div>
             <div class="legend-tooltip">
                 <button class="legend-tooltip-btn" aria-label="Show legend">?</button>
@@ -909,15 +909,6 @@
                                     <option value="organ">Organ</option>
                                 </select>
                             </div>
-                            <div class="advanced-options">
-                                <div class="toggle-switch">
-                                    <label class="switch">
-                                        <input type="checkbox" id="advancedAudioMode">
-                                        <span class="slider"></span>
-                                    </label>
-                                    <span>Enhanced Audio</span>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -949,7 +940,7 @@
                     <div id="customProgressionInput" style="display: none; margin-top: 10px;">
                         <div class="info-item">
                             <span class="info-label">Custom:</span>
-                            <input type="text" id="customProgression" placeholder="e.g. I-IV-V-I" style="flex: 1;">
+                            <input type="text" id="customProgression" placeholder="e.g. I-IV-V-I or I-vi-vi-ii, etc" style="flex: 1;">
                         </div>
                     </div>
                     
@@ -1011,7 +1002,6 @@
         let progressionInterval = null;
         let keyboardZoom = 1;
         let progressionHistory = [];
-        let enhancedAudio = false;
         let currentSoundType = 'sine';
 
         const NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
@@ -1337,20 +1327,12 @@
             
             // Setup audio settings
             document.getElementById('soundType').addEventListener('change', function() {
-                currentSoundType = this.value;
-                if (currentSoundType !== 'sine' && !Object.keys(audioSamples[currentSoundType]).length) {
-                    // Preload samples if not already loaded
-                    preloadAudioSamples(currentSoundType);
-                }
-            });
-            
-            // Setup enhanced audio toggle
-            document.getElementById('advancedAudioMode').addEventListener('change', function() {
-                enhancedAudio = this.checked;
-                if (enhancedAudio && currentSoundType !== 'sine' && !Object.keys(audioSamples[currentSoundType]).length) {
-                    preloadAudioSamples(currentSoundType);
-                }
-            });
+            currentSoundType = this.value;
+            if (currentSoundType !== 'sine' && !Object.keys(audioSamples[currentSoundType]).length) {
+                // Preload samples if not already loaded
+                preloadAudioSamples(currentSoundType);
+            }
+        });
             
             // Keyboard shortcuts
             document.addEventListener('keydown', handleKeyboardShortcuts);
@@ -1561,128 +1543,29 @@
             }
         }
 
-        function playEnhancedNote(note, duration = 1.5, delay = 0) {
+        function playNote(note) {
             if (!audioContext) {
                 initAudioContext();
             }
-            
-            const baseFreq = NOTE_FREQUENCIES[note];
-            if (!baseFreq) return;
-            
-            const now = audioContext.currentTime + delay;
-            
-            // Create nodes
+
             const oscillator = audioContext.createOscillator();
             const gainNode = audioContext.createGain();
-            const filterNode = audioContext.createBiquadFilter();
             
-            // Set up filter
-            filterNode.type = 'lowpass';
-            filterNode.frequency.setValueAtTime(1500, now);
-            filterNode.Q.setValueAtTime(0.5, now);
+            const baseFreq = NOTE_FREQUENCIES[note];
+            oscillator.type = currentSoundType === 'sine' ? 'sine' : 
+                            currentSoundType === 'piano' ? 'triangle' : 'sawtooth';
+            oscillator.frequency.setValueAtTime(baseFreq, audioContext.currentTime);
             
-            // Configure oscillator based on sound type
-            if (currentSoundType === 'sine') {
-                oscillator.type = 'sine';
-            } else if (currentSoundType === 'piano') {
-                oscillator.type = 'triangle';
-                // Add a second oscillator for harmonic richness
-                const harmonicOsc = audioContext.createOscillator();
-                harmonicOsc.type = 'sine';
-                harmonicOsc.frequency.setValueAtTime(baseFreq * 2, now); // Octave up
-                
-                const harmonicGain = audioContext.createGain();
-                harmonicGain.gain.setValueAtTime(0.2, now);
-                
-                harmonicOsc.connect(harmonicGain);
-                harmonicGain.connect(filterNode);
-                
-                harmonicOsc.start(now);
-                harmonicOsc.stop(now + duration);
-            } else if (currentSoundType === 'organ') {
-                oscillator.type = 'sawtooth';
-                // Add multiple oscillators for organ-like sound
-                [0.5, 1.5, 2, 3].forEach(harmonic => {
-                    const harmonicOsc = audioContext.createOscillator();
-                    harmonicOsc.type = 'sine';
-                    harmonicOsc.frequency.setValueAtTime(baseFreq * harmonic, now);
-                    
-                    const harmonicGain = audioContext.createGain();
-                    harmonicGain.gain.setValueAtTime(0.15 / harmonic, now);
-                    
-                    harmonicOsc.connect(harmonicGain);
-                    harmonicGain.connect(filterNode);
-                    
-                    harmonicOsc.start(now);
-                    harmonicOsc.stop(now + duration);
-                });
-            }
+            gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0.5, audioContext.currentTime + 0.05);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1.5);
+            gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 1.6);
             
-            // Set basic oscillator properties
-            oscillator.frequency.setValueAtTime(baseFreq, now);
-            
-            // Set envelope
-            gainNode.gain.setValueAtTime(0, now);
-            gainNode.gain.linearRampToValueAtTime(0.5, now + 0.05);
-            
-            if (currentSoundType === 'piano') {
-                // Faster decay for piano
-                gainNode.gain.exponentialRampToValueAtTime(0.05, now + 0.5);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, now + duration - 0.1);
-            } else if (currentSoundType === 'organ') {
-                // Slower decay for organ
-                gainNode.gain.exponentialRampToValueAtTime(0.3, now + 0.2);
-                gainNode.gain.linearRampToValueAtTime(0.25, now + duration - 0.2);
-            } else {
-                // Default decay
-                gainNode.gain.exponentialRampToValueAtTime(0.01, now + duration - 0.1);
-            }
-            
-            gainNode.gain.linearRampToValueAtTime(0, now + duration);
-            
-            // Connect nodes
             oscillator.connect(gainNode);
-            gainNode.connect(filterNode);
-            filterNode.connect(audioContext.destination);
+            gainNode.connect(audioContext.destination);
             
-            // Start and stop
-            oscillator.start(now);
-            oscillator.stop(now + duration);
-            
-            return {
-                oscillator,
-                gainNode,
-                filterNode
-            };
-        }
-
-        function playNote(note) {
-            if (enhancedAudio) {
-                playEnhancedNote(note);
-            } else {
-                if (!audioContext) {
-                    initAudioContext();
-                }
-
-                const oscillator = audioContext.createOscillator();
-                const gainNode = audioContext.createGain();
-                
-                const baseFreq = NOTE_FREQUENCIES[note];
-                oscillator.type = currentSoundType === 'sine' ? 'sine' : 
-                                 currentSoundType === 'piano' ? 'triangle' : 'sawtooth';
-                oscillator.frequency.setValueAtTime(baseFreq, audioContext.currentTime);
-                
-                gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-                gainNode.gain.linearRampToValueAtTime(0.5, audioContext.currentTime + 0.05);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1.5);
-                gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 1.6);
-                
-                oscillator.connect(gainNode);
-                gainNode.connect(audioContext.destination);
-                
-                oscillator.start();
-                oscillator.stop(audioContext.currentTime + 1.6);
-            }
+            oscillator.start();
+            oscillator.stop(audioContext.currentTime + 1.6);
 
             // Visual feedback with proper color restoration
             const keyElement = document.querySelector(`[data-note="${note}"]`);
@@ -1751,43 +1634,36 @@
                 key.style.backgroundColor = color;
             });
 
-            if (enhancedAudio) {
-                // Enhanced playback with staggered start for arpeggio effect
-                sortedNotes.forEach((note, index) => {
-                    playEnhancedNote(note, 2.0, index * 0.04);
-                });
-            } else {
-                // Standard playback
-                sortedNotes.forEach((note, index) => {
-                    const oscillator = audioContext.createOscillator();
-                    const gainNode = audioContext.createGain();
-                    
-                    const baseFreq = NOTE_FREQUENCIES[note];
-                    if (!baseFreq) {
-                        console.warn(`Frequency not found for note: ${note}`);
-                        return;
-                    }
-                    
-                    const baseVolume = 0.3;
-                    const volumeAdjust = index === 0 ? 1 : 0.8;
-                    
-                    oscillator.type = currentSoundType === 'sine' ? 'sine' : 
-                                     currentSoundType === 'piano' ? 'triangle' : 'sawtooth';
-                    oscillator.frequency.setValueAtTime(baseFreq, audioContext.currentTime);
-                    
-                    const startTime = audioContext.currentTime + (index * 0.02);
-                    gainNode.gain.setValueAtTime(0, startTime);
-                    gainNode.gain.linearRampToValueAtTime(baseVolume * volumeAdjust, startTime + 0.05);
-                    gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 2.0);
-                    gainNode.gain.linearRampToValueAtTime(0, startTime + 2.2);
-                    
-                    oscillator.connect(gainNode);
-                    gainNode.connect(audioContext.destination);
-                    
-                    oscillator.start(startTime);
-                    oscillator.stop(startTime + 2.2);
-                });
-            }
+            // Standard playback
+            sortedNotes.forEach((note, index) => {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                const baseFreq = NOTE_FREQUENCIES[note];
+                if (!baseFreq) {
+                    console.warn(`Frequency not found for note: ${note}`);
+                    return;
+                }
+                
+                const baseVolume = 0.3;
+                const volumeAdjust = index === 0 ? 1 : 0.8;
+                
+                oscillator.type = currentSoundType === 'sine' ? 'sine' : 
+                                currentSoundType === 'piano' ? 'triangle' : 'sawtooth';
+                oscillator.frequency.setValueAtTime(baseFreq, audioContext.currentTime);
+                
+                const startTime = audioContext.currentTime + (index * 0.02);
+                gainNode.gain.setValueAtTime(0, startTime);
+                gainNode.gain.linearRampToValueAtTime(baseVolume * volumeAdjust, startTime + 0.05);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 2.0);
+                gainNode.gain.linearRampToValueAtTime(0, startTime + 2.2);
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.start(startTime);
+                oscillator.stop(startTime + 2.2);
+            });
 
             // Highlight keys for visual feedback
             sortedNotes.forEach((note, index) => {
@@ -3417,7 +3293,7 @@
             window.addEventListener('load', () => {
                 // Create service worker code as a blob
                 const swCode = `
-                    // Service Worker for Mabel's Theory
+                    // Service Worker for Sierra's Theory
                     const CACHE_NAME = 'mabels-theory-v1';
                     
                     // Cache all necessary assets on install
