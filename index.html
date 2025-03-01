@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Mabel's Theory</title>
+    <meta name="theme-color" content="#121212">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Mabel's Theory">
     <style>
         :root {
             --bg-primary: #121212;
@@ -225,6 +229,37 @@
             align-items: center;
             gap: 8px;
             padding: 4px 0;
+        }
+
+        /* Install Button */
+        .install-container {
+            margin-left: 10px;
+        }
+
+        .install-btn {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            padding: 0;
+            min-height: auto;
+        }
+
+        .install-btn:hover {
+            background: var(--hover-color);
+        }
+
+        /* Hide install button by default - will show when installation is available */
+        #installBtn {
+            display: none;
         }
 
         .color-box {
@@ -735,6 +770,39 @@
             border-top: 1px solid var(--border-color);
         }
     </style>
+<!-- Web app manifest inline -->
+<script type="application/json" id="pwaManifest">
+    {
+        "name": "Mabel's Theory",
+        "short_name": "Mabel's Theory",
+        "description": "Music Theory & Chord Progression Tool",
+        "start_url": "./index.html",
+        "display": "standalone",
+        "background_color": "#121212",
+        "theme_color": "#121212",
+        "icons": [
+            {
+                "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDI0IDEwMjQiIGZpbGw9Im5vbmUiPjxyZWN0IHdpZHRoPSIxMDI0IiBoZWlnaHQ9IjEwMjQiIGZpbGw9IiMxMjEyMTIiIHJ4PSIyMDAiLz48cGF0aCBkPSJNNzUwIDMwMEwyNzQgMzAwTDI3NCA3MjRMNzUwIDcyNEw3NTAgMzAwWiIgZmlsbD0iIzFlMWUxZSIgc3Ryb2tlPSIjMDBmZjlkIiBzdHJva2Utd2lkdGg9IjE2Ii8+PHBhdGggZD0iTTM1MCA0MDBMNDAwIDMwMEw0NTAgNDAwTDUwMCAzMDBMNTUwIDQwMEw2MDAgMzAwTDY1MCA0MDBMNjUwIDcwMEwzNTAgNzAwTDM1MCA0MDBaIiBmaWxsPSIjZmYwMDZlIi8+PHBhdGggZD0iTTQwMCA1MDBMNjAwIDUwMEw2MDAgNjAwTDQwMCA2MDBMNDAwIDUwMFoiIGZpbGw9IiM4YTJiZTIiLz48L3N2Zz4=",
+                "sizes": "1024x1024",
+                "type": "image/svg+xml",
+                "purpose": "any maskable"
+            }
+        ]
+    }
+    </script>
+    
+    <!-- Apply the manifest programmatically -->
+    <script>
+        // Create a link element for the manifest
+        const manifestData = document.getElementById('pwaManifest').textContent;
+        const blob = new Blob([manifestData], {type: 'application/json'});
+        const manifestURL = URL.createObjectURL(blob);
+        
+        const manifestLink = document.createElement('link');
+        manifestLink.rel = 'manifest';
+        manifestLink.href = manifestURL;
+        document.head.appendChild(manifestLink);
+    </script>
 </head>
 <body>
     <div class="container">
@@ -764,6 +832,9 @@
                         <span>Circle of 4ths</span>
                     </div>
                 </div>
+            </div>
+            <div class="install-container">
+                <button id="installBtn" class="install-btn" aria-label="Install app">+</button>
             </div>
         </header>
 
@@ -1860,11 +1931,6 @@
                     
                     playChord(chordNotes);
                     currentChord.classList.add('playing');
-                    
-                    // Smooth scroll to current chord on mobile
-                    if (window.innerWidth <= 768) {
-                        currentChord.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }
                     
                     // Move to next chord
                     currentChordIndex = (currentChordIndex + 1) % chordItems.length;
@@ -3211,14 +3277,6 @@
             // Add custom touch handling for keyboard
             addTouchSupport();
             
-            // Add service worker for offline support
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('/sw.js').then(registration => {
-                    console.log('ServiceWorker registration successful');
-                }).catch(err => {
-                    console.log('ServiceWorker registration failed: ', err);
-                });
-            }
         });
         
         function addTouchSupport() {
@@ -3357,10 +3415,136 @@
         // Service worker for offline support
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js').catch(error => {
-                    console.log('ServiceWorker registration failed:', error);
-                });
+                // Create service worker code as a blob
+                const swCode = `
+                    // Service Worker for Mabel's Theory
+                    const CACHE_NAME = 'mabels-theory-v1';
+                    
+                    // Cache all necessary assets on install
+                    self.addEventListener('install', event => {
+                        event.waitUntil(
+                            caches.open(CACHE_NAME).then(cache => {
+                                return cache.addAll([
+                                    './',
+                                    './index.html'
+                                ]);
+                            })
+                        );
+                        // Activate immediately
+                        self.skipWaiting();
+                    });
+                    
+                    // Clean up old caches on activation
+                    self.addEventListener('activate', event => {
+                        event.waitUntil(
+                            caches.keys().then(cacheNames => {
+                                return Promise.all(
+                                    cacheNames.filter(cacheName => {
+                                        return cacheName !== CACHE_NAME;
+                                    }).map(cacheName => {
+                                        return caches.delete(cacheName);
+                                    })
+                                );
+                            })
+                        );
+                        // Take control of all clients immediately
+                        self.clients.claim();
+                    });
+                    
+                    // Serve from cache, falling back to network
+                    self.addEventListener('fetch', event => {
+                        event.respondWith(
+                            caches.match(event.request).then(response => {
+                                // Return cached response if found
+                                if (response) {
+                                    return response;
+                                }
+                                
+                                // Otherwise try fetching from network
+                                return fetch(event.request).then(networkResponse => {
+                                    // Don't cache responses from other origins
+                                    if (!event.request.url.startsWith(self.location.origin)) {
+                                        return networkResponse;
+                                    }
+                                    
+                                    // Clone the response before returning it
+                                    const responseToCache = networkResponse.clone();
+                                    
+                                    caches.open(CACHE_NAME).then(cache => {
+                                        cache.put(event.request, responseToCache);
+                                    });
+                                    
+                                    return networkResponse;
+                                });
+                            }).catch(() => {
+                                // Return a fallback for HTML pages if both cache and network fail
+                                if (event.request.headers.get('accept').includes('text/html')) {
+                                    return caches.match('./index.html');
+                                }
+                            })
+                        );
+                    });
+                `;
+                
+                // Create a blob URL for the service worker
+                const blob = new Blob([swCode], {type: 'application/javascript'});
+                const swURL = URL.createObjectURL(blob);
+                
+                // Register the service worker from the blob URL
+                navigator.serviceWorker.register(swURL)
+                    .then(registration => {
+                        console.log('ServiceWorker registration successful with scope:', registration.scope);
+                    })
+                    .catch(error => {
+                        console.error('ServiceWorker registration failed:', error);
+                    });
             });
+        }
+
+        // PWA installation logic
+        let deferredPrompt;
+        const installBtn = document.getElementById('installBtn');
+
+        // Listen for the beforeinstallprompt event
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Prevent the mini-infobar from appearing on mobile
+            e.preventDefault();
+            // Stash the event so it can be triggered later
+            deferredPrompt = e;
+            // Show the install button
+            installBtn.style.display = 'flex';
+        });
+
+        // Installation button click handler
+        installBtn.addEventListener('click', async () => {
+            if (!deferredPrompt) {
+                // The deferred prompt isn't available
+                return;
+            }
+            // Show the install prompt
+            deferredPrompt.prompt();
+            // Wait for the user to respond to the prompt
+            const { outcome } = await deferredPrompt.userChoice;
+            console.log(`User response to the install prompt: ${outcome}`);
+            // We've used the prompt, and can't use it again, so clear it
+            deferredPrompt = null;
+            // Hide the install button
+            installBtn.style.display = 'none';
+        });
+
+        // Listen for successful installation
+        window.addEventListener('appinstalled', (evt) => {
+            // Log install to analytics
+            console.log('App was installed');
+            // Hide the install button
+            installBtn.style.display = 'none';
+        });
+
+        // Check if already installed
+        if (window.matchMedia('(display-mode: standalone)').matches ||
+            window.navigator.standalone === true) {
+            // App is installed and running standalone
+            installBtn.style.display = 'none';
         }
     </script>
 </body>
