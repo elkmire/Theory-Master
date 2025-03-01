@@ -4,26 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Mabel's Theory</title>
-    
-    <!-- PWA related meta tags -->
-    <meta name="description" content="Music Theory & Chord Progression Tool">
-    <meta name="theme-color" content="#121212">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Mabel's Theory">
-    
-    <!-- Manifest link -->
-    <link rel="manifest" href="manifest.json">
-    
-    <!-- Apple touch icons -->
-    <link rel="apple-touch-icon" href="icons/icon-152x152.png">
-    <link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152x152.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-192x192.png">
-    <link rel="apple-touch-icon" sizes="167x167" href="icons/icon-152x152.png">
-    
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" sizes="32x32" href="icons/icon-72x72.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="icons/icon-72x72.png">
     <style>
         :root {
             --bg-primary: #121212;
@@ -196,25 +176,6 @@
             }
         }
 
-        .install-btn {
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            background: var(--scale-color);
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-            font-weight: bold;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: transform 0.2s ease;
-        }
-        
-        .install-btn:hover {
-            transform: scale(1.1);
-        }
-
         /* Legend as Tooltip */
         .legend-tooltip {
             position: relative;
@@ -299,7 +260,7 @@
             user-select: none;
             width: 100%; /* Fill the available width */
             max-width: 800px;
-            min-width: 490px;
+            min-width: auto; /* Remove fixed minimum width */
             border: 1px solid var(--border-color);
             margin: 0 auto; /* This is good */
             touch-action: manipulation;
@@ -783,10 +744,9 @@
                 <h1 class="app-title">Mabel's Theory</h1>
                 <p class="app-subtitle">Music Theory & Chord Progression Tool</p>
             </div>
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <div class="legend-tooltip">
-                    <button class="legend-tooltip-btn" aria-label="Show legend">?</button>
-                    <div class="legend-tooltip-content" role="tooltip">
+            <div class="legend-tooltip">
+                <button class="legend-tooltip-btn" aria-label="Show legend">?</button>
+                <div class="legend-tooltip-content" role="tooltip">
                     <div class="legend-item">
                         <div class="color-box" style="background: var(--root-color)"></div>
                         <span>Root Note</span>
@@ -804,7 +764,6 @@
                         <span>Circle of 4ths</span>
                     </div>
                 </div>
-                <button id="installBtn" class="install-btn" aria-label="Install app" style="display: none">+</button>
             </div>
         </header>
 
@@ -1261,6 +1220,15 @@
                     button.classList.add('active');
                     const tabId = button.dataset.tab + '-tab';
                     document.getElementById(tabId).classList.add('active');
+                    
+                    // Redraw keyboard when switching to keyboard tab
+                    if (button.dataset.tab === 'keyboard') {
+                        setTimeout(() => {
+                            createKeyboard();
+                            updateKeyboard();
+                            updateKeyboardZoom();
+                        }, 50);
+                    }
                 });
             });
 
@@ -1321,8 +1289,22 @@
 
         function updateKeyboardZoom() {
             const keyboard = document.getElementById('keyboard');
+            const container = document.querySelector('.keyboard-wrapper');
+            
+            // Adjust zoom for mobile devices
+            if (window.innerWidth <= 768) {
+                keyboardZoom = Math.min(keyboardZoom, 1.0);
+            }
+            
             keyboard.style.transform = `scale(${keyboardZoom})`;
             keyboard.style.transformOrigin = 'center top';
+            
+            // Ensure proper scrolling if keyboard is wider than container
+            if (keyboard.scrollWidth * keyboardZoom > container.clientWidth) {
+                container.style.overflowX = 'auto';
+            } else {
+                container.style.overflowX = 'hidden';
+            }
         }
 
         function handleKeyboardShortcuts(e) {
@@ -1919,16 +1901,29 @@
             keyboard.innerHTML = ''; // Clear existing keys
             
             const containerWidth = keyboard.clientWidth - 20; // Account for padding
+            const isMobile = window.innerWidth <= 768;
             const whiteKeys = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
             const blackKeys = ['C#', 'D#', 'F#', 'G#', 'A#'];
             
-            // Calculate key width based on container
-            const whiteKeyWidth = Math.min(35, containerWidth / 14); // 14 white keys in 2 octaves
+            // Calculate key width based on container and device
+            let whiteKeyWidth;
+            if (isMobile) {
+                // On mobile, make sure keys are at least 24px wide for touch targets
+                whiteKeyWidth = Math.max(24, Math.min(30, containerWidth / 14));
+            } else {
+                // On desktop, allow larger keys
+                whiteKeyWidth = Math.min(35, containerWidth / 14);
+            }
+            
             const blackKeyWidth = whiteKeyWidth * 0.6;
             
             // Calculate total width of all keys to center them
             const totalKeyboardWidth = whiteKeyWidth * 14; // 14 white keys in 2 octaves
-            const offsetToCenter = (containerWidth - totalKeyboardWidth) / 2;
+            
+            // Only center if we have enough space
+            const offsetToCenter = (containerWidth >= totalKeyboardWidth) 
+                ? (containerWidth - totalKeyboardWidth) / 2 
+                : 0;
             
             // Create two octaves
             for (let octave = 0; octave < 2; octave++) {
@@ -1966,6 +1961,13 @@
                     
                     keyboard.appendChild(key);
                 });
+            }
+            
+            // Set appropriate width to ensure all keys are visible
+            if (isMobile && containerWidth < totalKeyboardWidth) {
+                keyboard.style.width = `${totalKeyboardWidth + 20}px`; // Add padding
+            } else {
+                keyboard.style.width = '100%';
             }
         }
 
@@ -3211,30 +3213,10 @@
             
             // Add service worker for offline support
             if ('serviceWorker' in navigator) {
-                window.addEventListener('load', () => {
-                    navigator.serviceWorker.register('/sw.js')
-                        .then((registration) => {
-                            console.log('ServiceWorker registration successful with scope: ', registration.scope);
-                            
-                            // Check for updates on page load
-                            registration.update();
-                            
-                            // Set up a timer to check for updates periodically
-                            setInterval(() => {
-                                registration.update();
-                                console.log('Checking for service worker updates');
-                            }, 1000 * 60 * 60); // Check every hour
-                        })
-                        .catch((error) => {
-                            console.error('ServiceWorker registration failed: ', error);
-                        });
-                });
-                
-                // Listen for controller change to notify user of new content
-                navigator.serviceWorker.addEventListener('controllerchange', () => {
-                    console.log('New service worker activated');
-                    // Optionally notify the user that the app has been updated
-                    // You could display a toast notification here
+                navigator.serviceWorker.register('/sw.js').then(registration => {
+                    console.log('ServiceWorker registration successful');
+                }).catch(err => {
+                    console.log('ServiceWorker registration failed: ', err);
                 });
             }
         });
@@ -3345,74 +3327,41 @@
         }
 
         window.addEventListener('resize', function() {
-            // Update keyboard to fill space on resize
-            updateKeyboardZoom();
-            
-            // Recalculate key positions if needed
-            if (document.querySelectorAll('.key').length > 0) {
-                createKeyboard();
-                updateKeyboard();
-            }
+            // Debounce resize events to prevent performance issues
+            clearTimeout(window.resizeTimer);
+            window.resizeTimer = setTimeout(() => {
+                // Completely rebuild keyboard on resize for proper responsive layout
+                if (document.querySelectorAll('.key').length > 0) {
+                    createKeyboard();
+                    updateKeyboard();
+                    // Update zoom after keyboard is rebuilt
+                    setTimeout(updateKeyboardZoom, 50);
+                }
+                
+                // If progression is generated, ensure proper layout
+                if (document.getElementById('progressionOutput').textContent.trim() !== '') {
+                    const tabButton = document.querySelector('.tab-button[data-tab="keyboard"]');
+                    if (tabButton && !tabButton.classList.contains('active')) {
+                        // If not on keyboard tab, ensure keyboard tab is properly sized when returned to
+                        document.getElementById('keyboard').style.width = '100%';
+                    }
+                }
+            }, 200);
         });
         
         // Call once on load
         window.addEventListener('load', handleHighDPIDevices);
         // Also call on orientation change which may affect layout needs
         window.addEventListener('orientationchange', handleHighDPIDevices);
-
-        let deferredPrompt;
-        const installBtn = document.getElementById('installBtn');
-
-        // Check if the browser supports PWA installation
-        window.addEventListener('beforeinstallprompt', (e) => {
-            // Prevent Chrome 67 and earlier from automatically showing the prompt
-            e.preventDefault();
-            // Stash the event so it can be triggered later
-            deferredPrompt = e;
-            // Show the install button
-            installBtn.style.display = 'flex';
-            
-            // Log that the event was captured (for debugging)
-            console.log('Install prompt available');
-        });
-
-        // Handle the install button click
-        installBtn.addEventListener('click', async () => {
-            if (!deferredPrompt) {
-                // If the browser doesn't support installation or the app is already installed
-                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-                if (isIOS) {
-                    // Show iOS-specific install instructions
-                    alert('To install this app on your home screen: tap the share button and then "Add to Home Screen"');
-                } else {
-                    // Show generic instructions
-                    alert('This app can be installed through your browser settings');
-                }
-                return;
-            }
-
-            // Show the installation prompt
-            deferredPrompt.prompt();
-            
-            // Wait for the user to respond to the prompt
-            const { outcome } = await deferredPrompt.userChoice;
-            console.log(`User response to the install prompt: ${outcome}`);
-            
-            // We've used the prompt and can't use it again
-            deferredPrompt = null;
-            
-            // Hide the install button
-            installBtn.style.display = 'none';
-        });
-
-        // Handle the case where the app was successfully installed
-        window.addEventListener('appinstalled', (event) => {
-            console.log('App was successfully installed');
-            // Hide the install button after installation
-            installBtn.style.display = 'none';
-            // Clear the deferred prompt
-            deferredPrompt = null;
-        });
+        
+        // Service worker for offline support
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').catch(error => {
+                    console.log('ServiceWorker registration failed:', error);
+                });
+            });
+        }
     </script>
 </body>
 </html>
