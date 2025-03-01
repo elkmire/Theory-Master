@@ -1,171 +1,224 @@
 # [Theory Master](https://elkmire.github.io/Theory-Master/)
 click here^
 
-# Music Theory Tool Manual
+# Sierra's Theory: Complete User Guide
 
-## Quick Start
-This interactive application helps you explore music theory concepts, generate chord progressions, and understand harmonic relationships.
+## Getting Started
 
-## Basic Features
+Sierra's Theory runs directly in your web browser with no installation required. The app is designed to be intuitive and responsive, working on both desktop and mobile devices.
 
-### Interactive Keyboard
-* **Playing Notes**: 
-  * Click keys with mouse
-  * Use computer keyboard (A-L keys for lower octave)
-  * Visual feedback shows active notes and scale context
+Key features:
+- Interactive keyboard for note visualization
+- 14 scale types including major, minor, modes, and more
+- Chord progression generator with multiple templates
+- Real-time audio playback
+- Circle of fifths/fourths integration
+- Progression history for tracking your ideas
 
-### Main Controls
-* **Scale Selection**: Choose from major, minor, and exotic scales
-* **Key Selection**: Select any root note
-* **Mood Selection**: Generate progressions based on different emotional qualities
-* **Complementary Keys**: Shows the fifth up and fourth down for modulation
+## Understanding the Interface
 
-### Visual Color System
-* **Pink**: Root note of your selected key
-* **Teal**: Notes in the current scale
-* **Purple**: Fifth up (dominant relationship)
-* **Orange**: Fourth down (subdominant relationship)
-* **Blue**: Currently playing note
+The interface is divided into three main sections:
 
-## Theory Concepts
+### 1. Keyboard
+A virtual piano keyboard that visualizes scales and allows you to play notes. Keys are color-coded:
+- Root notes (Pink/Red)
+- Scale notes (Green)
+- Circle of 5ths (Purple)
+- Circle of 4ths (Orange)
 
-### Scale Construction
-The tool visualizes how scales are built from your chosen root note. Observe how different scale types create distinct patterns of whole and half steps:
-* Major scale: W-W-H-W-W-W-H
-* Natural minor: W-H-W-W-H-W-W
-* Other scales have unique patterns giving them their characteristic sound
+### 2. Settings
+Configure your musical parameters including:
+- Scale selection
+- Base key
+- Sound type (sine wave, piano, organ)
 
-### Circle of Fifths Navigation
-* The purple highlighted note shows your dominant (fifth up)
-* The orange highlighted note shows your subdominant (fourth down)
-* Use these for:
-  * Understanding key relationships
-  * Planning modulations
-  * Creating stronger cadences
+### 3. Progression Generator
+Create and customize chord progressions with options for:
+- Progression types (basic, common, jazz, random, etc.)
+- Number of chords
+- Extended chord types (7th, 9th, 11th)
 
-## Chord Progression Generator
+On mobile devices, these sections are accessible through tabs at the top of the screen.
 
-### Mode Options
-1. **Basic Triads**
-   * Three-note chords
-   * All notes in same octave
-   * Clear, fundamental harmonies
+## Scales and Key Settings
 
-2. **Seventh Chords**
-   * Adds seventh above triad
-   * More colorful sound
-   * Standard in jazz progressions
+The app offers an extensive collection of scales to experiment with:
 
-3. **Extended Chords**
-   * 9th and 11th extensions
-   * Rich, complex harmonies
-   * Great for modern styles
+- Major
+- Minor (Natural)
+- Harmonic Minor
+- Melodic Minor
+- Dorian
+- Phrygian
+- Lydian
+- Mixolydian
+- Locrian
+- Whole Tone
+- Diminished
+- Pentatonic Major
+- Pentatonic Minor
+- Blues
 
-4. **Complex Mode**
-   * Introduces borrowed chords
-   * Uses chromatic variations
-   * Creates unexpected turns
+### Understanding Relationships
 
-### Mood Selection
-* Happy: Major-key progressions with strong resolutions
-* Sad: Minor-key and descending patterns
-* Mysterious: Uses unconventional chord relationships
-* Epic: Strong movements with dramatic changes
-* Romantic: Smooth voice leading with emotional shifts
-* Melancholic: Minor keys with nostalgic patterns
-* Dreamy: Extended harmonies with ambiguous resolutions
-* Tense: Dissonant relationships and unresolved tensions
-* Peaceful: Gentle progressions with stable harmonies
+When you change scales or keys, the app automatically:
+- Updates the keyboard visualization
+- Shows you the "Up 5th Key" and "Down 4th Key" (helpful for modulation)
+- Adjusts any generated progressions to the new key
 
-## Adapting The Tool's Output
+Experiment with different scales to hear how they change the emotional quality of your progressions. For example:
+- Major scales tend to sound bright and happy
+- Minor scales often sound sad or melancholic
+- Modal scales like Dorian and Mixolydian have distinctive flavors used in many genres
+- Pentatonic scales work well for creating simple, catchy melodies
 
-### Understanding Voicings
-The tool generates linear voicings that you can adapt for different musical contexts:
+## Generating Chord Progressions
 
-#### Close Position
-```
-Original: C E G (all in same octave)
-Use when: 
-- Accompanying vocals
-- Need clear, compact sound
-- Playing with other instruments
-```
+The chord progression generator generates progressions and lists notes
 
-#### Open Position
-```
-Example: C (low) - G - E (high)
-Use when:
-- Solo piano
-- Need fuller sound
-- More space in arrangement
-```
+### Progression Types
 
-#### Drop Voicings
-```
-Drop 2: Take second note from top, lower by octave
-Original: C E G B
-Drop 2: C G B E
-Use in: Jazz comping, guitar arrangements
-```
+- **Basic (I-IV-V)**: The foundation of countless songs across genres
+- **Common (I-VI-IV-V)**: A popular progression in modern pop music
+- **Extended (I-III-VI-IV)**: Offers more emotional movement
+- **Circle of 5ths (VI-II-V-I)**: Common in jazz and classical music
+- **Jazz (II-V-I)**: The essential jazz progression
+- **Jazz II (III-VI-II-V)**: Extended jazz movement
+- **Random**: Algorithmically generated based on music theory principles
+- **Custom**: Define your own progression using Roman numerals
 
-### Creative Applications
+### Chord Options
 
-#### Practice Techniques
-1. Generate a progression in your chosen mood
-2. Practice it using different approaches:
-   * Block chords
-   * Broken (arpeggiated)
-   * Bass line with upper structure
-   * Different rhythmic patterns
+- **Chord Count**: Set the number of chords in your progression (2-16)
+- **7th Chords**: Enable to use seventh chords instead of triads
+- **+9th/11th**: Enable to use extended chord voicings
 
-#### Style Adaptations
+### Progression Display
 
-**Pop/Rock**
-* Keep voicings simple and clear
-* Emphasize root and fifth
-* Use rhythmic patterns
-* Stay mostly in root position
+Once generated, your progression shows:
+- Chord numbers and names
+- Specific notes in each chord
+- Musical context information
+- Scale reference for the current key
 
-**Jazz**
-* Use extended harmonies
-* Experiment with drop voicings
-* Add passing chords
-* Explore alterations
+### Playback Controls
 
-**Classical**
-* Focus on voice leading
-* Use inversions for smooth bass lines
-* Create melodic interest in all voices
-* Balance texture across register
+- **Play Individual Chords**: Click any chord to hear it
+- **Tempo Selection**: Choose from Slow to Very Fast
+- **Play Full Progression**: Play through the entire sequence
 
-**Ambient/Modern**
-* Spread voicings widely
-* Remove certain chord tones
-* Use sustain creatively
-* Create ambiguous harmonies
+### Suggested Substitutions
 
-### Voice Leading Tips
-* Connect common tones between chords
-* Move voices to nearest available notes
-* Create smooth bass lines through inversions
-* Balance voice movement with stability
+After generating a progression, you'll see suggested modifications:
+- **Add Secondary Dominant**: Creates tension pointing to a specific chord
+- **Tritone Substitution**: Replaces dominant chords with flat-II7
+- **Modal Interchange**: Borrows chords from parallel keys
+- **Extended Cadence**: Expands the ending of your progression
 
-## Advanced Usage
+These suggestions help you explore more complex harmony and create more interesting transitions between chords.
 
-### Modulation Techniques
-1. Use the fifth up (purple) for dominant modulation
-2. Use fourth down (orange) for subdominant modulation
-3. Try generating progressions in complementary keys
-4. Connect progressions through common chords
+## Music Theory Concepts
 
-### Chord Substitutions
-* Replace V with VII diminished
-* Use relative minor/major relationships
-* Explore chromatic mediants
-* Try secondary dominants
+The app incorporates many fundamental music theory concepts:
 
-## Final Notes
+### Roman Numeral Analysis
 
-Remember that this tool is meant to inspire and educate. The generated progressions are starting points – real musicality comes from how you adapt and use these ideas in your own playing. Experiment with different voicings, rhythms, and adaptations to find what works best for your musical vision.
+Chords are labeled using Roman numerals representing their position in the scale:
+- Uppercase (I, IV, V) for major chords
+- Lowercase (ii, iii, vi) for minor chords
+- Diminished chords marked with ° (vii°)
 
-Use the visual feedback of the keyboard to understand theoretical relationships, but let your ear be the final judge of what sounds right for your music.
+### Circle of Fifths/Fourths
+
+The app highlights the 5th and 4th relationships, which are crucial for:
+- Understanding key relationships
+- Recognizing common chord movements
+- Planning modulations between keys
+
+### Chord Construction
+
+The app builds chords according to music theory principles:
+- **Triads**: Three-note chords (root, third, fifth)
+- **Seventh Chords**: Four-note chords adding a seventh above the root
+- **Extended Chords**: Additional notes beyond the seventh (9ths, 11ths)
+
+### Chord Qualities
+
+Different chord types create different emotions:
+- **Major**: Bright, happy, resolved
+- **Minor**: Sad, mysterious, contemplative
+- **Diminished**: Tense, unstable, requiring resolution
+- **Augmented**: Dreamy, floating, ambiguous
+- **Seventh**: Added complexity and tension
+
+## Advanced Techniques
+
+Once you're comfortable with the basics, explore these advanced features:
+
+### Secondary Dominants
+
+These create a temporary "mini key change" that creates tension pointing to a specific chord. For example, V/V means "the dominant of the dominant" – creating emphasis on the V chord.
+
+### Modal Interchange
+
+Borrowing chords from parallel keys (e.g., using chords from C minor in a C major progression) adds emotional color and surprise. Common examples:
+- Using the iv chord in a major key progression
+- Using bVI or bVII chords from the parallel minor
+
+### Tritone Substitution
+
+Replace a dominant chord with another chord whose root is a tritone (three whole steps) away. This creates a chromatic bass movement while maintaining the tension of the dominant function.
+
+### Voice Leading
+
+Pay attention to how notes move between chords. Good voice leading means:
+- Notes move by small intervals when possible
+- Common tones stay the same between chords
+- Bass notes often move by 4ths, 5ths or step-wise motion
+
+The app's chord playback demonstrates smooth voice leading by default.
+
+## Tips for Songwriters
+
+### Finding the Right Key
+
+- Use the keyboard to try singing along with different root notes
+- Find a key that fits your vocal range comfortably
+
+### Emotional Progression Building
+
+- Start with a progression type that matches your intended emotion
+- Use modal interchange to add emotional color
+- Try both major and minor versions of the same progression
+
+### Genre Exploration
+
+- **Pop**: Try I-V-vi-IV or I-vi-IV-V progressions in major keys
+- **Rock**: Experiment with power chords (I-bVII-IV) and modal interchange
+- **Jazz**: Start with II-V-I progressions and add extensions
+- **Folk**: Simple progressions in major keys with occasional borrowed chords
+- **EDM**: Repeated short progressions with emphasis on the tonic and dominant
+
+### Creative Process
+
+1. Generate several progressions and save ones you like to history
+2. Try the same progression in different keys and scales
+3. Use the substitution suggestions to add variety
+4. Play individual chords to create your own custom order
+
+## Offline Usage
+
+The app also supports offline functionality:
+- **PWA Support**: Can be installed on your home screen
+- **Works Offline**: Continues functioning without internet connection
+- **Install Button**: Look for the + icon in the top-right to install
+
+## Keyboard Shortcuts
+
+Computer keyboard shortcuts make the app easier to use:
+- **A-L keys**: Play notes (A=C, W=C#, etc.)
+- **Space**: Play/stop progression
+- **G**: Generate new progression
+- **Arrow keys**: Navigate between chords during playback
+
+Enjoy music theory with Sierra's Theory!
